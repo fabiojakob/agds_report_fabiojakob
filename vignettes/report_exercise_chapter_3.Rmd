@@ -1,0 +1,73 @@
+---
+title: "Report Exercise Chapter 3"
+author: "Fabio Jakob 20-107-876"
+date: '2023-02-26'
+output: html_document
+---
+1.
+Cleaning the data manually in excel : Remove irrelevant columns,formated the table that theres only one head row, splitted the depth category in two colums that theres only one numeric value in each column, deleted empty rows and fill every row with the associating name of the experiment (in the default table the name of the experiment is only described in the first row of the experiment).
+
+2.
+Importing the dataset with the read.csv function.The dataset was cleaned before manually in excel.
+```{r}
+CO2_measurements <- read.csv("C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_fabiojakob/Data/1249534s1-s6.csv",header = TRUE, na.strings = c(NA, '-'), sep = ';')
+```
+
+Select the variables that i need for the task.
+```{r}
+log_response_data <- CO2_measurements |> 
+  dplyr::select(
+    Experiment,
+    increased_CO2,
+    ambient_CO2,
+    Time_years
+  )
+```
+
+```{r}
+knitr::kable(log_response_data)
+```
+
+Group the experiments by name and summarise the calculations of the means of the log response ratios per experiment.
+```{r}
+log_response_per_experiment <- log_response_data |> 
+  dplyr::group_by(Experiment)|>
+  dplyr::summarise(mean_log_response_ratio = mean(log(increased_CO2 / ambient_CO2)))
+```
+
+```{r}
+knitr::kable(log_response_per_experiment)
+```
+
+3.
+Mutating the year values into three phases: early phase, mid phase and late phase.
+```{r}
+log_response_ratio_per_phase <- log_response_data |>
+  dplyr::filter(Time_years <= 3) |>
+    dplyr::mutate(Time_years = "early_phase")|>
+    dplyr::bind_rows(
+      log_response_data |>
+       dplyr::filter(Time_years > 3 & Time_years < 6)|>
+        dplyr::mutate(Time_years = "mid_phase")|>
+       dplyr::bind_rows(
+          log_response_data |>
+           dplyr::filter(Time_years >= 6) |>
+            dplyr::mutate(Time_years = "late_phase")
+        )
+    )
+```
+
+```{r}
+knitr::kable(log_response_ratio_per_phase)
+```
+
+Calculating the mean of the log response ratio for each phase.
+```{r}
+log_response_ratio_per_phase |>
+  dplyr::group_by(Time_years) |>
+  dplyr::summarise(
+    log_response_ratio = mean(log(increased_CO2 / ambient_CO2))
+  )
+  
+```
+
