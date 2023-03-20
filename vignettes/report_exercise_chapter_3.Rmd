@@ -25,6 +25,10 @@ log_response_data <- CO2_measurements |>
 ```
 
 ```{r}
+```
+
+
+```{r}
 knitr::kable(log_response_data)
 ```
 
