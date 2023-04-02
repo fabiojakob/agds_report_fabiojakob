@@ -1,0 +1,69 @@
+---
+title: "Report Exercise Chapter 4"
+author: "Fabio Jakob 20-107-876"
+date: "2023-03-13"
+output: html_document
+---
+```{r}
+airquality <- datasets::airquality
+```
+
+```{r}
+airquality$Date <- seq(as.Date("1973/05/01"), as.Date("1973/09/30"), 1)
+```
+
+```{r}
+airquality |> dplyr::group_by(Month) |> dplyr::summarise(Ozone = mean(Ozone, na.rm = T))
+```
+```{r}
+sd(airquality$Ozone, na.rm = T)
+```
+
+
+```{r}
+ggplot2::ggplot(data = airquality,ggplot2::aes(x = Date, y = Ozone, colour = Ozone >= 100))+ 
+  ggplot2::geom_point()+ ggplot2::scale_color_manual(name = 'higher than threshold', values = setNames(c('black', 'red'), c(F,T)))+
+  ggplot2::labs(y= "Ozone [ppb]", x="", title="Ozone levels from may to october in 1973")
+
+ggplot2::ggplot(data = airquality, ggplot2::aes(x=Date))+
+  ggplot2::geom_point(ggplot2::aes(y=Ozone))+
+  ggplot2::geom_smooth(ggplot2::aes(y=Ozone), se=FALSE)+
+  ggplot2::labs(y= "Ozone [ppb]", x="", title="Ozone levels from may to october in 1973")
+```
+
+
+```{r}
+ggplot2::ggplot(data = airquality, ggplot2::aes(Solar.R, Ozone)) + ggplot2::geom_point() +     ggplot2::geom_smooth(method = 'lm', se = FALSE)+
+  ggplot2::labs(x = "Solar Radiation [lang]", y = "Ozone [ppb]", title = "Scatterplot of Ozone Levels and Solar Radiation")
+```
+```{r}
+cor(airquality$Ozone, airquality$Solar.R, use = "complete.obs", method = "pearson")
+cor.test(airquality$Ozone, airquality$Solar.R, use = "complete.obs", method = "pearson")
+```
+
+```{r}
+ggplot2::ggplot(data = airquality, ggplot2::aes(Ozone, Wind)) +
+                  ggplot2::geom_point() +
+                  ggplot2::geom_smooth(method = lm, se = FALSE) +
+                  ggplot2::labs(x = "Ozone [ppb]", y = "Windspeed [mph]", title = "Scatterplot of Ozone Levels and Windspeed")
+```
+
+```{r}
+cor(airquality$Ozone, airquality$Wind, use = "complete.obs", method = "pearson")
+cor.test(airquality$Ozone, airquality$Wind, use = "complete.obs", method = "pearson")
+```
+
+```{r}
+ggplot2::ggplot(data = airquality, ggplot2::aes(x=Date))+
+  ggplot2::geom_point(ggplot2::aes(y=Wind))+
+  ggplot2::geom_smooth(ggplot2::aes(y=Wind), se=FALSE) +
+  ggplot2::labs(x = "", y = "Windspeed [mph]", title = "Time Series Plot of Windspeed")
+
+ggplot2::ggplot(data = airquality, ggplot2::aes(x=Date))+
+  ggplot2::geom_point(ggplot2::aes(y=Solar.R))+
+  ggplot2::geom_smooth(ggplot2::aes(y=Solar.R), se=FALSE)+
+  ggplot2::labs(x = "", y = "Solar Radiation [lang]", title = "Time Series Plot of Solar Radiation")
+ 
+```
+
+
