@@ -1,0 +1,13 @@
+---
+title: "Report Exercise Chapter 7"
+author: "Fabio Jakob 20-107-876"
+date: "2023-04-03"
+output: html_document
+---
+
+
+
+
+My own project: https://github.com/fabiojakob/Exercise_Chapter_7
+
+Forked project. https://github.com/fabiojakob/Report_Exercise_Chapter_7
