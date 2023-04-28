@@ -1,0 +1,7 @@
+---
+title: "Report Exercise Chapter 10"
+author: "Ziggy Stardust"
+output:
+  html_document:
+    toc: true
+---

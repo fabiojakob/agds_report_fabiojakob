@@ -4,12 +4,15 @@ author: "Fabio Jakob 20-107-876"
 date: "2023-04-17"
 output: html_document
 ---
+read the data with readr
 ```{r}
 library(readr)
 df_for_stepwise_regression <- read_csv('C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_fabiojakob/Data/df_for_stepwise_regression.csv')
 View(df_for_stepwise_regression)
 ```
-manual implementation of stepwise forward regression:
+1. Evaluation of all bivariate models
+
+implementing steps 1-3 of the algorithm.
 
 Define the response variable and predictor variables
 ```{r}
@@ -22,12 +25,52 @@ Initialize an empty vector to store the selected predictors
 selected <- c()
 ```
 
+
 Set the significance level for adding predictors to the model
 ```{r}
 alpha <- 0.05
 ```
 
-Run the regression
+Fit a linear regression model with each predictor added one at a time
+```{r}
+p <- rep(NA, length(predictors))
+  
+for (i in 1:length(predictors)) {
+  formula <- paste(response, paste(c(selected, predictors[i]), collapse = "+"), sep = "~")
+  model <- lm(formula, df_for_stepwise_regression)
+  p[i] <- summary(model)$coef[2, 4]
+}
+```
+
+Find the predictor with the lowest p-value
+```{r}
+
+min_p <- min(p)
+min_index <- which(p == min_p)
+best_predictor <- predictors[min_index]
+```
+
+
+To visualize the results we can create a bar plot who shows the p-value of every model
+```{r}
+
+results <- data.frame(predictors, p)
+
+
+library(ggplot2)
+ggplot(results, aes(x = predictors, y = p)) + 
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = "", y = "P-Value") +
+  ggtitle("P-Values of Predictors") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  scale_y_continuous(trans = "log10")
+```
+Because the some p-values are very small i tried to fit results in a logarithmic scale but some values are still not visible because they are too small. We can still see which variables have a high p-value and therefore are not suitable for a final subset of predictors.
+
+2. manual implementation of stepwise forward regression:
+
+We use the same code as above and put it into a loop to add the suitable predictors one after another
 ```{r}
 while (length(predictors) > 0) {
   # Initialize a vector to store the p-values for each predictor
@@ -72,38 +115,19 @@ Print the final model summary
 summary(model)
 ```
 
-
+If we look at the R-squared we see that the value is 0.5884. This is not a very bad value but there are
+sure better options for a better model. But it is questionable if a higher R-squared is possible with the 
+methods that we've learned so far and the fact that the data set is not the easiest doesn't help.
+To visualize ho well the model fits the data we can predict the values of the response variable with the model using the predict function and put this values in a new column of the data set. Then we can create a scatter plot to see how the predicted and the actual values correlate.
 ```{r}
+df_for_stepwise_regression$y_pred <- predict(model, newdata = df_for_stepwise_regression)
+
 library(ggplot2)
-library(ggpubr)
-library(ggcorrplot)
-
-df_for_stepwise_regression <- na.omit(df_for_stepwise_regression)
-
-data <- data.frame(x1 = df_for_stepwise_regression$TA_F, x2 = df_for_stepwise_regression$SW_IN_F, x3 = df_for_stepwise_regression$LW_IN_F, x4 = df_for_stepwise_regression$VPD_F, x5 = df_for_stepwise_regression$TA_F_MDS,
-                    x6 = df_for_stepwise_regression$SW_IN_F_MDS, x7 = df_for_stepwise_regression$VPD_F_MDS, x8 = df_for_stepwise_regression$PPFD_IN, y = df_for_stepwise_regression$GPP_NT_VUT_REF)
-
-corr <- cor(data)
-
-
-ggcorrplot(corr, hc.order = TRUE, type = "upper", colors = c("#6D9EC1", "white", "#E46726"), lab = TRUE)
-
+ggplot(df_for_stepwise_regression, aes(x = GPP_NT_VUT_REF, y = y_pred)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(x = "Actual Values", y = "Predicted Values", title = "Stepwise Forward Regression Results")
 ```
-```{r}
-library(GGally)
-ggparcoord(data, columns = 1:8, groupColumn = "y")
-```
-```{r}
-install.packages("caret")
-```
-
-```{r}
-library(caret)
-
-model <- train(y ~ ., data = data, method = "lm")
-
-varImpPlot(model)
-```
+We see that the correlation is not that bad but also not perfect and the values are at least ïn the same magnitude.
 
 
 
@@ -113,28 +137,7 @@ varImpPlot(model)
 
 
 
-Empty Model:
-```{r}
-start <- lm(GPP_NT_VUT_REF ~ 1, data = df_for_stepwise_regression)
-head(df_for_stepwise_regression)
-```
 
-
-```{r}
-all <- lm(GPP_NT_VUT_REF ~ ., data = df_for_stepwise_regression)
-step(start, direction = "forward", scope = formula(all))
-```
-```{r}
-library(ggplot2)
-ggplot(data = df_for_stepwise_regression)+ geom_point(aes(x = TIMESTAMP, y = GPP_NT_VUT_REF))
-```
-
-```{r}
-final_model <- lm(formula = GPP_NT_VUT_REF ~ PPFD_IN + siteid + LW_IN_F + VPD_F_MDS + 
-    TA_F_MDS + SW_IN_F + WS_F + USTAR + VPD_F + CO2_F_MDS + PA_F + 
-    TIMESTAMP + P_F, data = df_for_stepwise_regression)
-summary(final_model)
-```
 
 
 
