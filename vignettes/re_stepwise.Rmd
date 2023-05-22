@@ -9,132 +9,119 @@ read the data with readr
 library(readr)
 df_for_stepwise_regression <- read_csv('C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_fabiojakob/Data/df_for_stepwise_regression.csv')
 View(df_for_stepwise_regression)
+
+df_for_stepwise_regression <- na.omit(df_for_stepwise_regression)
+
+df_for_stepwise_regression$GPP_NT_VUT_REF_new <- df_for_stepwise_regression$GPP_NT_VUT_REF
+
+df_for_stepwise_regression$GPP_NT_VUT_REF <- NULL
+
 ```
 1. Evaluation of all bivariate models
 
 implementing steps 1-3 of the algorithm.
-
-Define the response variable and predictor variables
 ```{r}
-response <- "GPP_NT_VUT_REF"
-predictors <- c("siteid", "TIMESTAMP", "TA_F", "SW_IN_F", "LW_IN_F", "VPD_F", "PA_F", "P_F", "WS_F", "TA_F_MDS", "SW_IN_F_MDS", "LW_IN_F_MDS", "VPD_F_MDS", "CO2_F_MDS", "PPFD_IN", "USTAR")
-```
 
-Initialize an empty vector to store the selected predictors
-```{r}
-selected <- c()
-```
+# create a list to store R-squared values for each model
+rsquared_list <- list()
 
-
-Set the significance level for adding predictors to the model
-```{r}
-alpha <- 0.05
-```
-
-Fit a linear regression model with each predictor added one at a time
-```{r}
-p <- rep(NA, length(predictors))
+# loop over each predictor variable
+for (predictor in names(df_for_stepwise_regression)[1:(ncol(df_for_stepwise_regression)-1)]) {
   
-for (i in 1:length(predictors)) {
-  formula <- paste(response, paste(c(selected, predictors[i]), collapse = "+"), sep = "~")
-  model <- lm(formula, df_for_stepwise_regression)
-  p[i] <- summary(model)$coef[2, 4]
+  # fit regression model with p predictors
+  model_1 <- lm(GPP_NT_VUT_REF_new ~ get(predictor), data = df_for_stepwise_regression)
+  
+  # compute R-squared and store in list
+  rsquared <- summary(model_1)$r.squared
+  rsquared_list[[predictor]] <- rsquared
 }
+
+# find predictor variable with highest R-squared
+best_predictor <- names(rsquared_list)[which.max(unlist(rsquared_list))]
+
+
+# fit best model and compute AIC
+best_model <- lm(GPP_NT_VUT_REF_new ~ get(best_predictor), data = df_for_stepwise_regression)
+best_aic <- AIC(best_model)
+
+
+# plot R-squared values for each predictor
+plot(unlist(rsquared_list), xlab = "", ylab = "R-Squared Values")
+axis(side = 1,at = seq(1, 16, 1), labels = names(rsquared_list), las = 2,)
 ```
-
-Find the predictor with the lowest p-value
-```{r}
-
-min_p <- min(p)
-min_index <- which(p == min_p)
-best_predictor <- predictors[min_index]
-```
-
-
-To visualize the results we can create a bar plot who shows the p-value of every model
-```{r}
-
-results <- data.frame(predictors, p)
-
-
-library(ggplot2)
-ggplot(results, aes(x = predictors, y = p)) + 
-  geom_bar(stat = "identity", fill = "steelblue") +
-  labs(x = "", y = "P-Value") +
-  ggtitle("P-Values of Predictors") +
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  scale_y_continuous(trans = "log10")
-```
-Because the some p-values are very small i tried to fit results in a logarithmic scale but some values are still not visible because they are too small. We can still see which variables have a high p-value and therefore are not suitable for a final subset of predictors.
-
 2. manual implementation of stepwise forward regression:
 
-We use the same code as above and put it into a loop to add the suitable predictors one after another
 ```{r}
-while (length(predictors) > 0) {
-  # Initialize a vector to store the p-values for each predictor
-  p <- rep(NA, length(predictors))
+selected <- c()
+aic <- Inf
+predictors <- c("siteid", "TIMESTAMP", "TA_F", "SW_IN_F", "LW_IN_F", "VPD_F", "PA_F", "P_F", "WS_F", "TA_F_MDS", "SW_IN_F_MDS", "LW_IN_F_MDS", "VPD_F_MDS", "CO2_F_MDS","PPFD_IN", "USTAR")
+```
+
+
+```{r}
+while (length(predictors)> 0) {
   
-  # Fit a linear regression model with each predictor added one at a time
+  r <- rep(NA, length(predictors))
+  
   for (i in 1:length(predictors)) {
-    formula <- paste(response, paste(c(selected, predictors[i]), collapse = "+"), sep = "~")
+    
+    formula <- paste("GPP_NT_VUT_REF_new", paste(predictors[i]), collapse = "+", sep     = "~")
     model <- lm(formula, df_for_stepwise_regression)
-    p[i] <- summary(model)$coef[2, 4]
+  
+    r[i] <- summary(model)$r.squared
   }
-  
-  # Find the predictor with the lowest p-value
-  min_p <- min(p)
-  min_index <- which(p == min_p)
+   
+  min_r <- max(r)
+  min_index <- which(r == min_r)
   best_predictor <- predictors[min_index]
+    
+ 
   
-  # Add the best predictor to the selected list
-  selected <- c(selected, best_predictor)
-  
-  # Remove the best predictor from the list of predictors
-  predictors <- predictors[-min_index]
-  
-  # Check if the best predictor is significant enough to keep in the model
-  if (min_p < alpha) {
-    cat(paste("Added", best_predictor, "to the model.\n"))
+  if (length(selected) == 0) {
+  formula <- paste("GPP_NT_VUT_REF_new", best_predictor, sep = "~")
   } else {
-    cat(paste("Stopped the algorithm. No more predictors are significant.\n"))
+  formula <- paste("GPP_NT_VUT_REF_new", paste(selected, collapse = "+"), sep = "~")
+  }
+
+  best_model <- lm(formula, df_for_stepwise_regression)
+
+  best_aic <- AIC(best_model)
+  
+  
+  
+  if (best_aic < aic) {
+    # Compare to current minimum AIC value
+    selected <- c(selected, best_predictor)
+    aic <- best_aic
+  } else {
     break
   }
+  
+    # Print the current value of the "selected" vector using cat()
+  print(aic)
+  flush.console()
+
+  predictors <- predictors[-min_index]
 }
+
+
 ```
 
-Fit a final linear regression model with the selected predictors
 ```{r}
-formula <- paste(response, paste(selected, collapse = "+"), sep = "~")
+formula <- paste("GPP_NT_VUT_REF_new", paste(selected, collapse = "+"), sep = "~")
 model <- lm(formula, df_for_stepwise_regression)
-```
 
-Print the final model summary
-```{r}
 summary(model)
 ```
 
-If we look at the R-squared we see that the value is 0.5884. This is not a very bad value but there are
-sure better options for a better model. But it is questionable if a higher R-squared is possible with the 
-methods that we've learned so far and the fact that the data set is not the easiest doesn't help.
-To visualize ho well the model fits the data we can predict the values of the response variable with the model using the predict function and put this values in a new column of the data set. Then we can create a scatter plot to see how the predicted and the actual values correlate.
 ```{r}
 df_for_stepwise_regression$y_pred <- predict(model, newdata = df_for_stepwise_regression)
 
 library(ggplot2)
-ggplot(df_for_stepwise_regression, aes(x = GPP_NT_VUT_REF, y = y_pred)) +
+ggplot(df_for_stepwise_regression, aes(x = GPP_NT_VUT_REF_new, y = y_pred)) +
   geom_point() + geom_smooth(method = "lm", se = FALSE, color = "red") +
   labs(x = "Actual Values", y = "Predicted Values", title = "Stepwise Forward Regression Results")
 ```
-We see that the correlation is not that bad but also not perfect and the values are at least ïn the same magnitude.
-
-
-
-
-
-
-
 
 
 
