@@ -8,17 +8,24 @@ output: html_document
 airquality <- datasets::airquality
 ```
 
+Create a new column in airquality to specify the date.
 ```{r}
 airquality$Date <- seq(as.Date("1973/05/01"), as.Date("1973/09/30"), 1)
 ```
 
+Calculate the mean ozone value per month
 ```{r}
 airquality |> dplyr::group_by(Month) |> dplyr::summarise(Ozone = mean(Ozone, na.rm = T))
 ```
+
+Calculate the standard deviation of the ozone values
 ```{r}
 sd(airquality$Ozone, na.rm = T)
 ```
 
+Plot the Ozone Value and mark the points red that are over the chosen threshold of 100 ppb.
+We see that the most values exceed the threshold occur in late summer/early autumn.
+The second the plot shows the smoothed line of the ozone over time. On this plot we see the same effect as described above.
 
 ```{r}
 ggplot2::ggplot(data = airquality,ggplot2::aes(x = Date, y = Ozone, colour = Ozone >= 100))+ 
@@ -32,15 +39,17 @@ ggplot2::ggplot(data = airquality, ggplot2::aes(x=Date))+
 ```
 
 
+In this plot is the correlation between the Ozone values and the solar radiation shown.
 ```{r}
 ggplot2::ggplot(data = airquality, ggplot2::aes(Solar.R, Ozone)) + ggplot2::geom_point() +     ggplot2::geom_smooth(method = 'lm', se = FALSE)+
   ggplot2::labs(x = "Solar Radiation [lang]", y = "Ozone [ppb]", title = "Scatterplot of Ozone Levels and Solar Radiation")
 ```
+If we calculate the spearman correlation coefficient we see that theres a weak positive correlation. Because the p-value is smaller than 0.05 the correlation statistically significant.
 ```{r}
 cor(airquality$Ozone, airquality$Solar.R, use = "complete.obs", method = "pearson")
 cor.test(airquality$Ozone, airquality$Solar.R, use = "complete.obs", method = "pearson")
 ```
-
+The next plot shows the correlation between the ozone values and the wind speed.
 ```{r}
 ggplot2::ggplot(data = airquality, ggplot2::aes(Ozone, Wind)) +
                   ggplot2::geom_point() +
@@ -48,11 +57,15 @@ ggplot2::ggplot(data = airquality, ggplot2::aes(Ozone, Wind)) +
                   ggplot2::labs(x = "Ozone [ppb]", y = "Windspeed [mph]", title = "Scatterplot of Ozone Levels and Windspeed")
 ```
 
+If we calculate the correlation of this pair we see that there's a strong negative correlation however the correlation is
+not statistically significant because the p-value is lower than 0.05.
 ```{r}
 cor(airquality$Ozone, airquality$Wind, use = "complete.obs", method = "pearson")
 cor.test(airquality$Ozone, airquality$Wind, use = "complete.obs", method = "pearson")
 ```
 
+The next two plots are time series plots of the windspeed and the solar radiation. we clearly see the low valuse of the wind
+speed late summer/ early autumn, which indicates the negative correaltion because the ozone values are the highest in late summer/early autumn. We see also in the second plot, that the solar radiation is slightly higher in the summer which indicates the small positive correlation.
 ```{r}
 ggplot2::ggplot(data = airquality, ggplot2::aes(x=Date))+
   ggplot2::geom_point(ggplot2::aes(y=Wind))+

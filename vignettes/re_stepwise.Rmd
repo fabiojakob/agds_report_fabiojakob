@@ -10,8 +10,10 @@ library(readr)
 df_for_stepwise_regression <- read_csv('C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_fabiojakob/Data/df_for_stepwise_regression.csv')
 View(df_for_stepwise_regression)
 
+#handle the NA-Values
 df_for_stepwise_regression <- na.omit(df_for_stepwise_regression)
 
+#make the GPP the last column in the table
 df_for_stepwise_regression$GPP_NT_VUT_REF_new <- df_for_stepwise_regression$GPP_NT_VUT_REF
 
 df_for_stepwise_regression$GPP_NT_VUT_REF <- NULL

@@ -44,6 +44,7 @@ daily_fluxes <- read_csv("C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_f
   dplyr::select(-ends_with("_QC"))
 ```
 ```{r}
+library(tidyverse)
 caret::train(
   form = GPP_NT_VUT_REF ~ SW_IN_F + VPD_F + TA_F, 
   data = daily_fluxes |> drop_na(),  # drop missing values
@@ -72,6 +73,7 @@ pp <- recipes::recipe(GPP_NT_VUT_REF ~ SW_IN_F + VPD_F + TA_F, data = daily_flux
   recipes::step_center(all_numeric(), -all_outcomes()) |>
   recipes::step_scale(all_numeric(), -all_outcomes())
 ```
+
 ```{r}
 caret::train(
   pp, 
@@ -224,58 +226,123 @@ eval_model(mod = mod_knn, df_train = daily_fluxes_train, df_test = daily_fluxes_
 ```
 2. Interpret observed differences in the context of the bias-variance trade-off:
 
--   Why is the difference between the evaluation on the training and the test set larger for the KNN model     than the linear regression model? 
+-   Why is the difference between the evaluation on the training and the test set larger for the KNN model ,than the linear regression model? 
 
-  The difference between the evaluation on the training and test set is larger for the KNN model than for   the linear regression model because the KNN model has a higher variance than the linear regression        model. This means that the KNN model is more sensitive to the training data and may overfit to the        training data. In contrast, the linear regression model has lower variance and is less sensitive to       the training data.
+The difference between the train and test set scores is larger for the ANN model than for the linear regression model because the ANN model has more variance than the linear regression model. This means that the ANN model is more sensitive to the training data and maybe overfits the training data. In contrast, linear regression models have less variance and are less sensitive to the training data.
   
--   Why is the does the evaluation on the test set indicate a better model performance of the KNN model       than the linear regression model?
+-   Why is the does the evaluation on the test set indicate a better model performance of the KNN model than the linear regression model?
 
-  The evaluation on the test set indicates a better performance of the KNN model than the linear            regression model because the KNN model has a lower bias than the linear regression model. This means      that the KNN model can capture more complex patterns in the data that the linear regression model may     miss due to its assumption of a linear relationship between the variables. The KNN model may be better    suited to capture non-linear relationships in the data.
+The evaluation on the test set indicates a better performance of the KNN model than the linear regression model because the KNN model has a lower bias than the linear regression model. This means that the KNN model can capture more complex patterns in the data that the linear regression model maybe miss. The KNN model may be better suited to capture non-linear
+relationships in the data.
   
--   How would you position the KNN and the linear regression model along the spectrum of the bias-variance     trade-off?
+-   How would you position the KNN and the linear regression model along the spectrum of the bias-variance trade-off?
 
-  Along the spectrum of the bias-variance trade-off, the KNN model would be positioned closer to the high   variance end, whereas the linear regression model would be positioned closer to the high bias end. The    KNN model has lower bias and higher variance, which makes it more flexible and better at capturing        complex patterns in the data but also more prone to overfitting. The linear regression model has higher   bias and lower variance, which makes it less flexible but more robust to noise and less prone to          overfitting. The choice of model will depend on the specific requirements of the problem and the          trade-off between bias and variance that is acceptable for the given application.
+Along the spectrum of the bias-variance trade-off, the KNN model would be positioned closer to the high variance end, whereas the linear regression model would be positioned closer to the high bias end. The KNN model has lower bias and higher variance. The linear regression model has higher bias and lower variance, which makes it less flexible but more robust to noise and less prone to overfitting. The choice of model will depend on the specific requirements of the problem and the trade-off between bias and variance that is acceptable for the given application.
   
 3.
 ```{r}
-# Load necessary packages
 library(ggplot2)
+daily_fluxes <- na.omit(daily_fluxes)
 
-daily_fluxes$predicted_values_lm <- predict(mod_lm, newdata = daily_fluxes)
+# Create a data frame with observed and predicted GPP for linear regression
+linear_regression_predictions <- data.frame(
+  Date = daily_fluxes$TIMESTAMP,
+  Observed = daily_fluxes$GPP_NT_VUT_REF,
+  Predicted = predict(mod_lm, newdata = daily_fluxes |> drop_na())
+)
 
-# Define a function to create a line plot of observed and modelled GPP for a given model
-plot_gpp <- function(model_name, df_obs, df_mod) {
-  
-  # Subset data frames to include only GPP and date columns
-  df_obs <- df_obs[, c("TIMESTAMP", "GPP_NT_VUT_REF")]
-  df_mod <- df_mod[, c("TIMESTAMP", "fitted")]
-  
-  # Rename columns in modelled GPP data frame to match observed GPP data frame
-  colnames(df_mod) <- c("DATE", "GPP_NT_VUT_REF")
-  
-  # Combine observed and modelled GPP data frames
-  df_all <- rbind(df_obs, df_mod)
-  
-  # Create plot
-  plot <- ggplot(df_all, aes(x = DATE, y = GPP_NT_VUT_REF, color = model_name)) +
-    geom_line() +
-    labs(title = "Observed and Modelled GPP",
-         subtitle = model_name,
-         x = "Date",
-         y = "GPP (umol m^-2 s^-1)",
-         color = "Model") +
-    theme_bw()
-  
-  return(plot)
-}
+# Create a data frame with observed and predicted GPP for KNN
+knn_predictions <- data.frame(
+  Date = daily_fluxes$TIMESTAMP,
+  Observed = daily_fluxes$GPP_NT_VUT_REF,
+  Predicted = predict(mod_knn, newdata = daily_fluxes |> drop_na())
+)
 
-# Call the plot_gpp function for each model
-plot1 <- plot_gpp("Model 1", daily_fluxes, df_mod1)
-plot2 <- plot_gpp("Model 2", daily_fluxes, df_mod2)
 
-# Arrange plots side by side using the patchwork package
-library(patchwork)
-plot1 + plot2
+ggplot(linear_regression_predictions, aes(x = Date)) +
+  geom_line(aes(y = Observed, color = "Observed")) +
+  geom_line(aes(y = Predicted, color = "Linear Regression Predicted")) +
+  labs(x = "Date", y = "GPP", title = "Observed vs. Linear Regression Predicted GPP") +
+  scale_color_manual(values = c("Observed" = "black", "Linear Regression Predicted" = "blue"))
+
+
+ggplot(knn_predictions, aes(x = Date)) +
+  geom_line(aes(y = Observed, color = "Observed")) +
+  geom_line(aes(y = Predicted, color = "KNN Predicted")) +
+  labs(x = "Date", y = "GPP", title = "Observed vs. KNN Predicted GPP") +
+  scale_color_manual(values = c("Observed" = "black", "KNN Predicted" = "red"))
 
 ```
+The role of k:
+
+1. Hypothesis for k approaching 1:
+   - R2: R2 on the training set would increase, while R2 on the test set would decrease due to overfitting.
+   - MAE: MAE on the training set would decrease, while MAE on the test set would increase due to increased sensitivity to      noise and outliers.
+
+2. Hypothesis for k approaching N:
+   - R2: R2 on both the training and test sets would decrease due to a more generalized model.
+   - MAE: MAE on the training set would increase, while MAE on the test set would decrease slightly or remain stable due to      smoothing of predictions.
+
+
+```{r}
+library(rsample)
+library(caret)
+library(tidyr)
+library(ggplot2)
+
+# Function to fit KNN model and return MAE on test set
+calculate_MAE <- function(k) {
+  set.seed(1982) 
+  split <- rsample::initial_split(daily_fluxes, prop = 0.7, strata = "VPD_F")
+  daily_fluxes_train <- rsample::training(split)
+  daily_fluxes_test <- rsample::testing(split)
+  
+  
+  pp <- recipes::recipe(GPP_NT_VUT_REF ~ SW_IN_F + VPD_F + TA_F, 
+                        data = daily_fluxes_train |> drop_na()) |> 
+    recipes::step_BoxCox(all_predictors()) |> 
+    recipes::step_center(all_numeric(), -all_outcomes()) |>
+    recipes::step_scale(all_numeric(), -all_outcomes())
+  
+  # Fit KNN model
+  mod_knn <- caret::train(
+    pp, 
+    data = daily_fluxes_train |> drop_na(), 
+    method = "knn",
+    trControl = caret::trainControl(method = "none"),
+    tuneGrid = data.frame(k = k),
+    metric = "MAE"
+  )
+  
+  # Predict on test set
+  test_predictions <- predict(mod_knn, newdata = daily_fluxes_test |> drop_na())
+  
+  # Calculate MAE on test set
+  test_mae <- caret::MAE(test_predictions, daily_fluxes_test$GPP_NT_VUT_REF |> na.omit())
+  
+  return(test_mae)
+}
+
+# Range of k values to test
+k_values <- seq(1, 50, by = 1)
+
+# Calculate MAE for different k values
+mae_results <- sapply(k_values, calculate_MAE)
+
+# Exercise 3: Find optimal k (minimum MAE)
+optimal_k <- k_values[which.min(mae_results)]
+optimal_mae <- min(mae_results)
+
+# Viualization
+data <- data.frame(k = k_values, MAE = mae_results)
+ggplot(data, aes(x = k, y = MAE)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = optimal_k, linetype = "dashed", color = "red") +
+  labs(x = "k", y = "MAE", title = "MAE (Predictive Accuracy) vs. k (Complexity") +
+  annotate("text", x = optimal_k + 2, y = optimal_mae + 0.1, label = paste("Optimal k =", optimal_k), color = "red")
+
+
+```
+
 
