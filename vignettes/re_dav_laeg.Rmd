@@ -1,0 +1,144 @@
+---
+title: "Dav_Laeg"
+author: "Fabio Jakob 20-107-876"
+date: "2023-05-22"
+output: html_document
+---
+
+```{r}
+library(rsample)
+library(dplyr)
+library(tidyr)
+library(caret)
+
+library(readr)
+davos_data <-  read_csv("C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_fabiojakob/Data/FLX_CH-Dav_FLUXNET2015_FULLSET_DD_1997-2014_1-3.csv")
+laegern_data <- read_csv("C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_fabiojakob/Data/FLX_CH-Lae_FLUXNET2015_FULLSET_DD_2004-2014_1-4.csv")
+
+# Set aside 20% of Davos data for testing
+set.seed(1982)
+davos_split <- initial_split(davos_data, prop = 0.8)
+davos_train <- training(davos_split)
+davos_test <- testing(davos_split)
+
+# Set aside 20% of Laegern data for testing
+set.seed(1982)  
+laegern_split <- initial_split(laegern_data, prop = 0.8)
+laegern_train <- training(laegern_split)
+laegern_test <- testing(laegern_split)
+```
+```{r}
+# Train and tune KNN models for Davos
+mod_davos <- caret::train(
+  GPP_NT_VUT_REF ~ SW_IN_F + VPD_F + TA_F,
+  data = davos_train,
+  method = "knn",
+  trControl = caret::trainControl(method = "none"),
+  tuneGrid = data.frame(k = 1),
+  metric = "MAE"
+)
+
+# Train and tune KNN models for Laegern
+mod_laegern <- caret::train(
+  GPP_NT_VUT_REF ~ SW_IN_F + VPD_F + TA_F,
+  data = laegern_train,
+  method = "knn",
+  trControl = caret::trainControl(method = "none"),
+  tuneGrid = data.frame(k = 1),
+  metric = "MAE"
+)
+
+# Make predictions 
+davos_preds_within <- predict(mod_davos, newdata = davos_test)
+
+laegern_preds_within <- predict(mod_laegern, newdata = laegern_test)
+
+laegern_preds_across <- predict(mod_davos, newdata = laegern_test)
+
+davos_preds_across <- predict(mod_laegern, newdata = davos_test)
+
+# Calculate metrics for within-site predictions
+mae_davos_within <- mean(abs(davos_preds_within - davos_test$GPP_NT_VUT_REF))
+mae_laegern_within <- mean(abs(laegern_preds_within - laegern_test$GPP_NT_VUT_REF))
+rmse_davos_within <- sqrt(mean((davos_preds_within - davos_test$GPP_NT_VUT_REF)^2))
+rmse_laegern_within <- sqrt(mean((laegern_preds_within - laegern_test$GPP_NT_VUT_REF)^2))
+r2_davos_within <- caret::R2(davos_preds_within, davos_test$GPP_NT_VUT_REF)
+r2_laegern_within <- caret::R2(laegern_preds_within, laegern_test$GPP_NT_VUT_REF)
+
+# Calculate metrics for across-site predictions
+mae_davos_across <- mean(abs(davos_preds_across - davos_test$GPP_NT_VUT_REF))
+mae_laegern_across <- mean(abs(laegern_preds_across - laegern_test$GPP_NT_VUT_REF))
+rmse_davos_across <- sqrt(mean((davos_preds_across - davos_test$GPP_NT_VUT_REF)^2))
+rmse_laegern_across <- sqrt(mean((laegern_preds_across - laegern_test$GPP_NT_VUT_REF)^2))
+r2_davos_across <- caret::R2(davos_preds_across, davos_test$GPP_NT_VUT_REF)
+r2_laegern_across <- caret::R2(laegern_preds_across, laegern_test$GPP_NT_VUT_REF)
+
+# Print the metrics
+# Within-Site Predictions - Davos Metrics
+cat("Within-Site Predictions - Davos Metrics:\n")
+cat("MAE:", mae_davos_within, "\n")
+cat("RMSE:", rmse_davos_within, "\n")
+cat("R-squared:", r2_davos_within, "\n")
+
+# Within-Site Predictions - Laegern Metrics
+cat("Within-Site Predictions - Laegern Metrics:\n")
+cat("MAE:", mae_laegern_within, "\n")
+cat("RMSE:", rmse_laegern_within, "\n")
+cat("R-squared:", r2_laegern_within, "\n")
+
+# Across-Site Predictions - Davos Metrics
+cat("Across-Site Predictions - Davos Metrics:\n")
+cat("MAE:", mae_davos_across, "\n")
+cat("RMSE:", rmse_davos_across, "\n")
+cat("R-squared:", r2_davos_across, "\n")
+
+# Across-Site Predictions - Laegern Metrics
+cat("Across-Site Predictions - Laegern Metrics:\n")
+cat("MAE:", mae_laegern_across, "\n")
+cat("RMSE:", rmse_laegern_across, "\n")
+cat("R-squared:", r2_laegern_across, "\n")
+```
+```{r}
+# Rename the columns in laegern_train to match the column names in davos_train
+colnames(laegern_train) <- colnames(davos_train)
+# Combine the training data from both sites
+combined_train <- rbind(davos_train, laegern_train)
+
+
+# Train and tune KNN model using combined training data
+mod_combined <- caret::train(
+  GPP_NT_VUT_REF ~ SW_IN_F + VPD_F + TA_F,
+  data = combined_train,
+  method = "knn",
+  trControl = caret::trainControl(method = "none"),
+  tuneGrid = data.frame(k = 1),
+  metric = "MAE"
+)
+
+# Make predictions on the test set of Davos using the combined model
+davos_preds_combined <- predict(mod_combined, newdata = davos_test)
+
+# Make predictions on the test set of Laegern using the combined model
+laegern_preds_combined <- predict(mod_combined, newdata = laegern_test)
+
+# Calculate Metrics for predictions on the test set of Davos using the combined model
+mae_davos_combined <- mean(abs(davos_preds_combined - davos_test$GPP_NT_VUT_REF))
+rmse_davos_combined <- sqrt(mean((davos_preds_combined - davos_test$GPP_NT_VUT_REF)^2))
+r2_davos_combined <- caret::R2(davos_preds_combined, davos_test$GPP_NT_VUT_REF)
+# Calculate Metrics for predictions on the test set of Laegern using the combined model
+mae_laegern_combined <- mean(abs(laegern_preds_combined - laegern_test$GPP_NT_VUT_REF))
+rmse_laegern_combined <- sqrt(mean((laegern_preds_combined - laegern_test$GPP_NT_VUT_REF)^2))
+r2_laegern_combined <- caret::R2(laegern_preds_combined, laegern_test$GPP_NT_VUT_REF)
+# Print the metrics
+cat("Combined Model Metrics:\n")
+cat("MAE - Davos Test Set:", mae_davos_combined, "\n")
+cat("MAE - Laegern Test Set:", mae_laegern_combined, "\n")
+cat("RMSE - Davos Test Set:", rmse_davos_combined, "\n")
+cat("RMSE - Laegern Test Set:", rmse_laegern_combined, "\n")
+cat("R-squared - Davos Test Set:", r2_davos_combined, "\n")
+cat("R-squared - Laegern Test Set:", r2_laegern_combined, "\n")
+
+```
+The MAE of the combined model (1.716382) is higher compared to the within-site prediction (1.432683) but lower than the across-site prediction (2.681038). This suggests that the combined model performs better than the across-site prediction but slightly worse than the within-site prediction in terms of MAE. The RMSE of the combined model (2.342907) is higher than the within-site prediction (1.908078) but lower than the across-site prediction (3.418387). Similar to MAE, the combined model falls in between the performance of within-site and across-site predictions in terms of RMSE. The R-squared of the combined model (0.4683918) is lower than the within-site prediction (0.5738439) but higher than the across-site prediction (0.2871969). This indicates that the combined model explains less variance in the target variable compared to within-site prediction but performs better than the across-site prediction.
+
+
