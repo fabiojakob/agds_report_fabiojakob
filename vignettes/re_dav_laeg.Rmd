@@ -28,7 +28,7 @@ laegern_train <- training(laegern_split)
 laegern_test <- testing(laegern_split)
 ```
 ```{r}
-# Train and tune KNN models for Davos
+# Train KNN models for Davos
 mod_davos <- caret::train(
   GPP_NT_VUT_REF ~ SW_IN_F + VPD_F + TA_F,
   data = davos_train,
@@ -38,7 +38,7 @@ mod_davos <- caret::train(
   metric = "MAE"
 )
 
-# Train and tune KNN models for Laegern
+# Train KNN models for Laegern
 mod_laegern <- caret::train(
   GPP_NT_VUT_REF ~ SW_IN_F + VPD_F + TA_F,
   data = laegern_train,
@@ -74,38 +74,38 @@ r2_davos_across <- caret::R2(davos_preds_across, davos_test$GPP_NT_VUT_REF)
 r2_laegern_across <- caret::R2(laegern_preds_across, laegern_test$GPP_NT_VUT_REF)
 
 # Print the metrics
-# Within-Site Predictions - Davos Metrics
+
 cat("Within-Site Predictions - Davos Metrics:\n")
 cat("MAE:", mae_davos_within, "\n")
 cat("RMSE:", rmse_davos_within, "\n")
 cat("R-squared:", r2_davos_within, "\n")
 
-# Within-Site Predictions - Laegern Metrics
+
 cat("Within-Site Predictions - Laegern Metrics:\n")
 cat("MAE:", mae_laegern_within, "\n")
 cat("RMSE:", rmse_laegern_within, "\n")
 cat("R-squared:", r2_laegern_within, "\n")
 
-# Across-Site Predictions - Davos Metrics
+
 cat("Across-Site Predictions - Davos Metrics:\n")
 cat("MAE:", mae_davos_across, "\n")
 cat("RMSE:", rmse_davos_across, "\n")
 cat("R-squared:", r2_davos_across, "\n")
 
-# Across-Site Predictions - Laegern Metrics
+
 cat("Across-Site Predictions - Laegern Metrics:\n")
 cat("MAE:", mae_laegern_across, "\n")
 cat("RMSE:", rmse_laegern_across, "\n")
 cat("R-squared:", r2_laegern_across, "\n")
 ```
 ```{r}
-# Rename the columns in laegern_train to match the column names in davos_train
+# Rename the columns in laegern_train to match the column names in davos_train because of error that occurs
 colnames(laegern_train) <- colnames(davos_train)
 # Combine the training data from both sites
 combined_train <- rbind(davos_train, laegern_train)
 
 
-# Train and tune KNN model using combined training data
+# Train KNN model using combined training data
 mod_combined <- caret::train(
   GPP_NT_VUT_REF ~ SW_IN_F + VPD_F + TA_F,
   data = combined_train,
@@ -121,11 +121,11 @@ davos_preds_combined <- predict(mod_combined, newdata = davos_test)
 # Make predictions on the test set of Laegern using the combined model
 laegern_preds_combined <- predict(mod_combined, newdata = laegern_test)
 
-# Calculate Metrics for predictions on the test set of Davos using the combined model
+# Calculate Metrics 
 mae_davos_combined <- mean(abs(davos_preds_combined - davos_test$GPP_NT_VUT_REF))
 rmse_davos_combined <- sqrt(mean((davos_preds_combined - davos_test$GPP_NT_VUT_REF)^2))
 r2_davos_combined <- caret::R2(davos_preds_combined, davos_test$GPP_NT_VUT_REF)
-# Calculate Metrics for predictions on the test set of Laegern using the combined model
+
 mae_laegern_combined <- mean(abs(laegern_preds_combined - laegern_test$GPP_NT_VUT_REF))
 rmse_laegern_combined <- sqrt(mean((laegern_preds_combined - laegern_test$GPP_NT_VUT_REF)^2))
 r2_laegern_combined <- caret::R2(laegern_preds_combined, laegern_test$GPP_NT_VUT_REF)
@@ -141,11 +141,11 @@ cat("R-squared - Laegern Test Set:", r2_laegern_combined, "\n")
 ```
 Davos:
 
-The MAE of the combined model (1.716382) is higher compared to the within-site prediction (1.432683) but lower than the across-site prediction (2.681038). This suggests that the combined model performs better than the across-site prediction but slightly worse than the within-site prediction in terms of MAE. The RMSE of the combined model (2.342907) is higher than the within-site prediction (1.908078) but lower than the across-site prediction (3.418387). Similar to MAE, the combined model falls in between the performance of within-site and across-site predictions in terms of RMSE. The R-squared of the combined model (0.4683918) is lower than the within-site prediction (0.5738439) but higher than the across-site prediction (0.2871969). This indicates that the combined model explains less variance in the target variable compared to within-site prediction but performs better than the across-site prediction.
+The MAE of the combined model (1.716382) is higher compared to the within-site prediction (1.432683) but lower than the across-site prediction (2.681038). This suggests that the combined model performs better than the across-site prediction but slightly worse than the within-site prediction in terms of MAE. The RMSE of the combined model (2.342907) is higher than the within-site prediction (1.908078) but lower than the across-site prediction (3.418387). Similar to MAE, the combined model falls in between the performance of within-site and across-site predictions in terms of RMSE. The R-squared of the combined model (0.4683918) is lower than the within-site prediction (0.5738439) but higher than the across-site prediction (0.2871969). This indicates that the combined model has less variance in the target variable compared to within-site prediction but performs better than the across-site prediction.
 
 Laegern:
 
-The MAE of the combined model (2.624202) is higher compared to the within-site prediction (2.578398) but lower than the across-site prediction (2.812392). Similar to Davos, the combined model falls in between the performance of within-site and across-site predictions in terms of MAE. The RMSE of the combined model (3.45284) is higher than the within-site prediction (3.446785) but lower than the across-site prediction (3.608857). Again, the combined model's performance lies between within-site and across-site predictions in terms of RMSE.The R-squared of the combined model (0.4216017) is lower than the within-site prediction (0.450199) but higher than the across-site prediction (0.4022021). This indicates that the combined model explains less variance in the target variable compared to within-site prediction but performs better than the across-site prediction.
+The MAE of the combined model (2.624202) is higher compared to the within-site prediction (2.578398) but lower than the across-site prediction (2.812392). Similar to Davos, the combined model falls in between the performance of within-site and across-site predictions in terms of MAE. The RMSE of the combined model (3.45284) is higher than the within-site prediction (3.446785) but lower than the across-site prediction (3.608857). Again the combined model's performance lies between within-site and across-site predictions in terms of RMSE.The R-squared of the combined model (0.4216017) is lower than the within-site prediction (0.450199) but higher than the across-site prediction (0.4022021). This indicates that the combined model has less variance in the target variable compared to within-site prediction but performs better than the across-site prediction.
 
 We see that the metrics of the combined model of the two sites fall in between the performance of within-site and across-site predictions. That could mean that the combined model is more valid than within-site predictions but less valid than across-site predictions. With this information it is difficult to say if the true out-of-sample approach is more valid than a combined model. I would say yes because the true out-of-sample model is trained for the specific site and can capture the site-specific structure and characteristics.
 
