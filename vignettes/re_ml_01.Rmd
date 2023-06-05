@@ -1,6 +1,6 @@
 ---
-title: "Report Exercise Chapter 10"
-author: "Ziggy Stardust"
+title: "Report Exercise Chapter 9"
+author: "Fabio Jakob 20-107-876"
 output:
   html_document:
     toc: true
@@ -207,7 +207,7 @@ mod_knn <- caret::train(
 )
 ```
 ```{r}
-source("C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_fabiojakob/vignettes/re_ml_01_eval_model.r")
+source("C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_fabiojakob/Functions/re_ml_01_eval_model.r")
 ```
 
 ```{r}
@@ -258,7 +258,7 @@ knn_predictions <- data.frame(
   Predicted = predict(mod_knn, newdata = daily_fluxes |> drop_na())
 )
 
-
+#Plotting
 ggplot(linear_regression_predictions, aes(x = Date)) +
   geom_line(aes(y = Observed, color = "Observed")) +
   geom_line(aes(y = Predicted, color = "Linear Regression Predicted")) +
@@ -277,7 +277,7 @@ The role of k:
 
 1. Hypothesis for k approaching 1:
    - R2: R2 on the training set would increase, while R2 on the test set would decrease due to overfitting.
-   - MAE: MAE on the training set would decrease, while MAE on the test set would increase due to increased sensitivity to      noise and outliers.
+   - MAE: MAE on the training set would decrease, while MAE on the test set would increase due to increased sensitivity      
 
 2. Hypothesis for k approaching N:
    - R2: R2 on both the training and test sets would decrease due to a more generalized model.
@@ -339,7 +339,7 @@ ggplot(data, aes(x = k, y = MAE)) +
   geom_line() +
   geom_point() +
   geom_vline(xintercept = optimal_k, linetype = "dashed", color = "red") +
-  labs(x = "k", y = "MAE", title = "MAE (Predictive Accuracy) vs. k (Complexity") +
+  labs(x = "k", y = "MAE", title = "MAE (Predictive Accuracy) vs. k (Complexity)" +
   annotate("text", x = optimal_k + 2, y = optimal_mae + 0.1, label = paste("Optimal k =", optimal_k), color = "red")
 
 

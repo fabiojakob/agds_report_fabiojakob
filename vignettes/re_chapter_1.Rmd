@@ -1,0 +1,96 @@
+---
+title: "Report Excercise Chapter 1"
+author: "Fabio Jakob 20-107-876"
+date: "2023-06-05"
+output: html_document
+---
+
+Dimensions of a circle
+```{r}
+radius <- 1
+area <- pi * radius^2
+circ <- 2 * pi * radius
+```
+
+print the result
+```{r}
+print(paste("Radius:", radius, "   Circumference:", circ))
+```
+Sequence of Numbers (from 0 to Pi with length of 5)
+```{r}
+seq(0, pi, length.out = 5)
+```
+Gauss sum
+```{r}
+vec_a <- 1:50
+vec_b <- 100:51
+vec_c <- vec_a + vec_b
+
+# each element is 101
+vec_c
+```
+```{r}
+# the length of vectors is fifty. 50 * 101
+sum(vec_c)
+```
+Magic trick algorithm
+```{r}
+x <- -999  # arbitrary integer
+x_save <- x  # save for the last step
+x <- x + 1
+x <- x * 2
+x <- x + 4
+x <- x / 2
+x - x_save
+```
+Vectors
+class of vector
+```{r}
+class(datasets::rivers)
+```
+length of vector
+```{r}
+length(datasets::rivers)
+```
+mean value
+```{r}
+mean(datasets::rivers)
+```
+33% quantile
+```{r}
+quantile(datasets::rivers, probs = 0.33)
+```
+Data frames
+dimension
+```{r}
+dim(datasets::quakes)
+```
+maximum magnitude
+```{r}
+vec <- datasets::quakes$mag
+max(vec)
+```
+```{r}
+idx <- which.max(vec)  # index of largest value
+
+# geographic positions defined by longitude and latitude (columns long and lat)
+datasets::quakes$long[idx]
+```
+```{r}
+datasets::quakes$lat[idx]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

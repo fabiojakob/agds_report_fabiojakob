@@ -13,6 +13,9 @@ Importing the dataset with the read.csv function.The dataset was cleaned before 
 CO2_measurements <- read.csv("C:/Users/fabio.LAPTOP-FR4VQFHF/Documents/agds_report_fabiojakob/Data/1249534s1-s6.csv",header = TRUE, na.strings = c(NA, '-'), sep = ';')
 ```
 
+
+
+
 Select the variables that i need for the task.
 ```{r}
 log_response_data <- CO2_measurements |> 
@@ -24,8 +27,6 @@ log_response_data <- CO2_measurements |>
   )
 ```
 
-```{r}
-```
 
 
 ```{r}

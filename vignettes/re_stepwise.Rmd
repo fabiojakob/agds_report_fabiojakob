@@ -1,5 +1,5 @@
 ---
-title: "re_stepwise"
+title: "Report Exercise Chapter 8"
 author: "Fabio Jakob 20-107-876"
 date: "2023-04-17"
 output: html_document
@@ -99,9 +99,7 @@ while (length(predictors)> 0) {
     break
   }
   
-    # Print the current value of the "selected" vector using cat()
-  print(aic)
-  flush.console()
+
 
   predictors <- predictors[-min_index]
 }
@@ -124,6 +122,7 @@ ggplot(df_for_stepwise_regression, aes(x = GPP_NT_VUT_REF_new, y = y_pred)) +
   geom_point() + geom_smooth(method = "lm", se = FALSE, color = "red") +
   labs(x = "Actual Values", y = "Predicted Values", title = "Stepwise Forward Regression Results")
 ```
+The visualization shows that the model is not that good in predicting the GPP values.
 
 
 
