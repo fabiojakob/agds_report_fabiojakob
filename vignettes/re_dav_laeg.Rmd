@@ -139,6 +139,32 @@ cat("R-squared - Davos Test Set:", r2_davos_combined, "\n")
 cat("R-squared - Laegern Test Set:", r2_laegern_combined, "\n")
 
 ```
+Davos:
+
 The MAE of the combined model (1.716382) is higher compared to the within-site prediction (1.432683) but lower than the across-site prediction (2.681038). This suggests that the combined model performs better than the across-site prediction but slightly worse than the within-site prediction in terms of MAE. The RMSE of the combined model (2.342907) is higher than the within-site prediction (1.908078) but lower than the across-site prediction (3.418387). Similar to MAE, the combined model falls in between the performance of within-site and across-site predictions in terms of RMSE. The R-squared of the combined model (0.4683918) is lower than the within-site prediction (0.5738439) but higher than the across-site prediction (0.2871969). This indicates that the combined model explains less variance in the target variable compared to within-site prediction but performs better than the across-site prediction.
 
+Laegern:
+
+The MAE of the combined model (2.624202) is higher compared to the within-site prediction (2.578398) but lower than the across-site prediction (2.812392). Similar to Davos, the combined model falls in between the performance of within-site and across-site predictions in terms of MAE. The RMSE of the combined model (3.45284) is higher than the within-site prediction (3.446785) but lower than the across-site prediction (3.608857). Again, the combined model's performance lies between within-site and across-site predictions in terms of RMSE.The R-squared of the combined model (0.4216017) is lower than the within-site prediction (0.450199) but higher than the across-site prediction (0.4022021). This indicates that the combined model explains less variance in the target variable compared to within-site prediction but performs better than the across-site prediction.
+
+We see that the metrics of the combined model of the two sites fall in between the performance of within-site and across-site predictions. That could mean that the combined model is more valid than within-site predictions but less valid than across-site predictions. With this information it is difficult to say if the true out-of-sample approach is more valid than a combined model. I would say yes because the true out-of-sample model is trained for the specific site and can capture the site-specific structure and characteristics.
+
+Elevation
+
+Davos: 1639m
+Laegern: 689m
+
+Climate
+
+Davos: Mean annual temperature: 2.8 Celsius, Mean annual percip.: 1062mm
+Laegern: Mean annual temperature: 8.3 Celsius, Mean annual percip.: 1100mm
+
+
+Vegetation
+
+Davos: Evergreen Needleleaf Forests
+Laegern: Mixed Forests
+
+The Different altitudes could have an impact on the GPP levels as well as the temperature and the vegetation type. The precipitation seems not to have a big impact on the GPP in this example because the percipitation doesn't differ much.
+This differences could lead to deviations and discrepancies in the predictions.
 
